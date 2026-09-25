@@ -122,8 +122,8 @@ try:
         "TWILIO_VERIFY_SERVICE_SID"
     ]
 
-    TELEGRAM_GATEWAY_TOKEN = st.secrets[
-        "TELEGRAM_GATEWAY_TOKEN"
+    TELEGRAM_BOT_TOKEN = st.secrets[
+        "TELEGRAM_BOT_TOKEN"
     ]
 
 except Exception as e:
@@ -346,7 +346,7 @@ def send_telegram_otp(phone):
 
     headers = {
         "Authorization":
-        f"Bearer {TELEGRAM_GATEWAY_TOKEN}",
+        f"Bearer {TELEGRAM_BOT_TOKEN}",
 
         "Content-Type":
         "application/json"
@@ -387,7 +387,7 @@ def verify_telegram_otp(request_id, otp):
 
     headers = {
         "Authorization":
-        f"Bearer {TELEGRAM_GATEWAY_TOKEN}",
+        f"Bearer {TELEGRAM_BOT_TOKEN}",
 
         "Content-Type":
         "application/json"
