@@ -14,10 +14,9 @@ from twilio.rest import Client
 # =========================================================
 
 st.set_page_config(
-    page_title="PragyanAI | OTP Verification",
+    page_title="PragyanAI OTP Verification",
     page_icon="🔐",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
 
@@ -29,328 +28,205 @@ st.markdown(
     """
     <style>
 
-    /* =====================================================
-       GLOBAL
-       ===================================================== */
+    /* ================================
+       MAIN PAGE
+       ================================ */
 
     .stApp {
-        background: #f7f7f8;
-    }
-
-    .main {
-        background: #f7f7f8;
-    }
-
-    html, body, [class*="css"] {
-        color: #000000 !important;
-    }
-
-    p, span, label, div {
+        background-color: #ffffff;
         color: #000000;
     }
 
+    .main {
+        background-color: #ffffff;
+        color: #000000;
+    }
 
-    /* =====================================================
+    /* ================================
+       ALL TEXT BLACK
+       ================================ */
+
+    p,
+    span,
+    label,
+    div,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        color: #000000;
+    }
+
+    /* ================================
        SIDEBAR
-       ===================================================== */
+       ================================ */
 
     section[data-testid="stSidebar"] {
-        background: #ffffff;
-        border-right: 1px solid #e5e5e5;
+        background-color: #ffffff;
+        border-right: 1px solid #dddddd;
     }
 
     section[data-testid="stSidebar"] * {
         color: #000000 !important;
     }
 
-    .sidebar-logo {
+    /* Sidebar title */
+
+    .sidebar-title {
+        font-size: 26px;
+        font-weight: 700;
         text-align: center;
-        font-size: 30px;
-        font-weight: 800;
-        margin-top: 10px;
-        margin-bottom: 4px;
+        margin-bottom: 5px;
+        color: #000000 !important;
     }
 
     .sidebar-subtitle {
+        font-size: 14px;
         text-align: center;
-        font-size: 13px;
-        color: #666666 !important;
+        color: #000000 !important;
         margin-bottom: 25px;
     }
 
-    .sidebar-section {
-        font-size: 13px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-top: 20px;
-        margin-bottom: 10px;
-    }
+    /* ================================
+       MAIN TITLE
+       ================================ */
 
-
-    /* =====================================================
-       MAIN HEADER
-       ===================================================== */
-
-    .hero {
-        background: linear-gradient(
-            135deg,
-            #000000 0%,
-            #222222 100%
-        );
-
-        padding: 38px 35px;
-        border-radius: 24px;
-        margin-bottom: 30px;
-
-        box-shadow:
-            0 15px 40px rgba(0, 0, 0, 0.15);
-    }
-
-    .hero-title {
-        color: #ffffff !important;
+    .title {
+        text-align: center;
         font-size: 42px;
         font-weight: 800;
-        margin-bottom: 8px;
-    }
-
-    .hero-subtitle {
-        color: #dddddd !important;
-        font-size: 17px;
-        margin-bottom: 0;
-    }
-
-
-    /* =====================================================
-       VERIFICATION CARD
-       ===================================================== */
-
-    .verification-card {
-        background: #ffffff;
-        border: 1px solid #e5e5e5;
-
-        border-radius: 24px;
-
-        padding: 35px;
-
-        box-shadow:
-            0 12px 35px rgba(0, 0, 0, 0.07);
-
-        margin-bottom: 25px;
-    }
-
-    .method-icon {
-        font-size: 45px;
-        margin-bottom: 8px;
-    }
-
-    .method-title {
-        font-size: 28px;
-        font-weight: 800;
         color: #000000 !important;
-        margin-bottom: 8px;
+        margin-top: 10px;
+        margin-bottom: 5px;
     }
 
-    .method-description {
-        font-size: 15px;
-        color: #666666 !important;
-        margin-bottom: 25px;
+    .subtitle {
+        text-align: center;
+        font-size: 18px;
+        color: #000000 !important;
+        margin-bottom: 35px;
     }
 
+    /* ================================
+       CARD
+       ================================ */
 
-    /* =====================================================
-       INPUTS
-       ===================================================== */
+    .card {
+        background-color: #ffffff;
+        padding: 30px;
+        border-radius: 18px;
+        border: 1px solid #dddddd;
+        box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.08);
+        margin: auto;
+        max-width: 850px;
+    }
+
+    .card-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #000000 !important;
+        margin-bottom: 20px;
+    }
+
+    .card-description {
+        font-size: 16px;
+        color: #000000 !important;
+        margin-bottom: 20px;
+    }
+
+    /* ================================
+       INPUT BOXES
+       ================================ */
+
+    input {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+    }
+
+    textarea {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+    }
+
+    [data-baseweb="input"] {
+        background-color: #ffffff !important;
+    }
+
+    [data-baseweb="input"] input {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+    }
+
+    /* ================================
+       INPUT LABELS
+       ================================ */
 
     .stTextInput label {
         color: #000000 !important;
-        font-weight: 700 !important;
+        font-weight: 600;
     }
 
-    .stTextInput input {
-        background-color: #ffffff !important;
-        color: #000000 !important;
-
-        border: 1px solid #cccccc !important;
-
-        border-radius: 12px !important;
-
-        padding: 13px !important;
-    }
-
-    .stTextInput input:focus {
-        border: 2px solid #000000 !important;
-        box-shadow: none !important;
-    }
-
-
-    /* =====================================================
+    /* ================================
        BUTTONS
-       ===================================================== */
+       ================================ */
 
     .stButton > button {
-        width: 100%;
-
-        height: 48px;
-
-        border-radius: 12px !important;
-
-        background: #000000 !important;
-
+        background-color: #000000 !important;
         color: #ffffff !important;
-
-        border: none !important;
-
-        font-size: 15px;
-
-        font-weight: 700;
-
-        transition: all 0.2s ease;
+        border: 1px solid #000000 !important;
+        border-radius: 10px;
+        font-weight: 600;
+        height: 48px;
     }
 
     .stButton > button:hover {
-        background: #333333 !important;
-
-        transform: translateY(-2px);
-
-        box-shadow:
-            0 8px 18px rgba(0, 0, 0, 0.18);
+        background-color: #333333 !important;
+        color: #ffffff !important;
+        border-color: #333333 !important;
     }
 
     .stButton > button p {
         color: #ffffff !important;
     }
 
+    /* ================================
+       RADIO BUTTON
+       ================================ */
 
-    /* =====================================================
-       DIVIDER
-       ===================================================== */
-
-    .soft-divider {
-        height: 1px;
-        background: #eeeeee;
-        margin: 25px 0;
+    div[data-testid="stRadio"] label {
+        color: #000000 !important;
+        font-weight: 600;
     }
 
-
-    /* =====================================================
-       VERIFIED BOX
-       ===================================================== */
-
-    .verified-box {
-        background: #f0fff4;
-
-        border: 1px solid #b7ebc6;
-
-        border-radius: 14px;
-
-        padding: 16px;
-
-        text-align: center;
-
-        margin-top: 20px;
-
-        font-weight: 700;
-
-        color: #166534 !important;
+    div[data-testid="stRadio"] label p {
+        color: #000000 !important;
     }
 
-
-    /* =====================================================
-       PARTY POPPER CELEBRATION
-       ===================================================== */
-
-    .party-container {
-        position: relative;
-
-        text-align: center;
-
-        margin: 20px 0;
-
-        height: 85px;
-
-        overflow: hidden;
-    }
-
-    .party {
-        position: absolute;
-
-        font-size: 38px;
-
-        animation:
-            party-fall 1.8s ease-out forwards;
-    }
-
-    .party:nth-child(1) {
-        left: 15%;
-        animation-delay: 0s;
-    }
-
-    .party:nth-child(2) {
-        left: 28%;
-        animation-delay: 0.15s;
-    }
-
-    .party:nth-child(3) {
-        left: 40%;
-        animation-delay: 0.25s;
-    }
-
-    .party:nth-child(4) {
-        left: 52%;
-        animation-delay: 0.1s;
-    }
-
-    .party:nth-child(5) {
-        left: 64%;
-        animation-delay: 0.2s;
-    }
-
-    .party:nth-child(6) {
-        left: 76%;
-        animation-delay: 0.05s;
-    }
-
-    @keyframes party-fall {
-
-        0% {
-            transform:
-                translateY(-80px)
-                rotate(0deg)
-            scale(0.5);
-
-            opacity: 0;
-        }
-
-        30% {
-            opacity: 1;
-        }
-
-        100% {
-            transform:
-                translateY(70px)
-                rotate(30deg)
-            scale(1.2);
-
-            opacity: 0;
-        }
-    }
-
-
-    /* =====================================================
+    /* ================================
        FOOTER
-       ===================================================== */
+       ================================ */
 
     .footer {
         text-align: center;
-
-        color: #777777 !important;
-
-        font-size: 13px;
-
-        margin-top: 35px;
-
+        color: #000000 !important;
+        font-size: 14px;
+        margin-top: 30px;
         padding: 20px;
+    }
+
+    /* ================================
+       STATUS BOX
+       ================================ */
+
+    .info-box {
+        background-color: #f5f5f5;
+        border-left: 5px solid #000000;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+        color: #000000 !important;
     }
 
     </style>
@@ -360,32 +236,20 @@ st.markdown(
 
 
 # =========================================================
-# FUNCTIONS
+# TITLE
 # =========================================================
 
-def show_party_booster(message):
-    """
-    Shows a party-popper celebration.
-    No balloons are used.
-    """
+st.markdown(
+    '<div class="title">🔐 PragyanAI OTP Verification</div>',
+    unsafe_allow_html=True
+)
 
-    st.markdown(
-        """
-        <div class="party-container">
-
-            <div class="party">🎉</div>
-            <div class="party">🎊</div>
-            <div class="party">🎉</div>
-            <div class="party">🎊</div>
-            <div class="party">🎉</div>
-            <div class="party">🎊</div>
-
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    st.success(message)
+st.markdown(
+    '<div class="subtitle">'
+    'Secure OTP verification using Email, SMS and WhatsApp'
+    '</div>',
+    unsafe_allow_html=True
+)
 
 
 # =========================================================
@@ -397,9 +261,7 @@ EMAIL_APP_PASSWORD = st.secrets["EMAIL_APP_PASSWORD"]
 
 TWILIO_ACCOUNT_SID = st.secrets["TWILIO_ACCOUNT_SID"]
 TWILIO_AUTH_TOKEN = st.secrets["TWILIO_AUTH_TOKEN"]
-TWILIO_VERIFY_SERVICE_SID = st.secrets[
-    "TWILIO_VERIFY_SERVICE_SID"
-]
+TWILIO_VERIFY_SERVICE_SID = st.secrets["TWILIO_VERIFY_SERVICE_SID"]
 
 
 # =========================================================
@@ -418,9 +280,11 @@ twilio_client = Client(
 
 defaults = {
 
+    # Email OTP storage
     "email_otp_value": None,
     "email_otp_time": None,
 
+    # Verification status
     "email_verified": False,
     "sms_verified": False,
     "whatsapp_verified": False
@@ -496,8 +360,9 @@ PragyanAI
             message.as_string()
         )
 
+    # Store generated OTP separately
+    # from the text input widget
     st.session_state.email_otp_value = otp
-
     st.session_state.email_otp_time = time.time()
 
 
@@ -516,22 +381,19 @@ def verify_email_otp(entered_otp):
         - st.session_state.email_otp_time
     )
 
+    # OTP expires after 5 minutes
     if elapsed > 300:
 
         st.session_state.email_otp_value = None
-
         st.session_state.email_otp_time = None
 
-        return False, (
-            "OTP expired. Please request a new OTP."
-        )
+        return False, "OTP expired. Please request a new OTP."
 
     if entered_otp == st.session_state.email_otp_value:
 
         st.session_state.email_verified = True
 
         st.session_state.email_otp_value = None
-
         st.session_state.email_otp_time = None
 
         return True, "Email verified successfully."
@@ -540,7 +402,7 @@ def verify_email_otp(entered_otp):
 
 
 # =========================================================
-# TWILIO OTP
+# SMS / WHATSAPP OTP
 # =========================================================
 
 def send_twilio_otp(phone, channel):
@@ -584,13 +446,13 @@ def verify_twilio_otp(phone, otp):
 with st.sidebar:
 
     st.markdown(
-        '<div class="sidebar-logo">🔐 PragyanAI</div>',
+        '<div class="sidebar-title">🔐 PragyanAI</div>',
         unsafe_allow_html=True
     )
 
     st.markdown(
         '<div class="sidebar-subtitle">'
-        'Secure OTP Verification'
+        'OTP Verification System'
         '</div>',
         unsafe_allow_html=True
     )
@@ -598,14 +460,11 @@ with st.sidebar:
     st.markdown("---")
 
     st.markdown(
-        '<div class="sidebar-section">'
-        'Verification Methods'
-        '</div>',
-        unsafe_allow_html=True
+        "### Select Verification Method"
     )
 
     selected_method = st.radio(
-        "Select method",
+        "Choose one",
         [
             "📧 Email",
             "📱 SMS",
@@ -618,65 +477,39 @@ with st.sidebar:
 
     st.markdown(
         """
-        **PragyanAI**
+        **Available Services**
 
-        🔐 Secure
+        📧 Email OTP
 
-        ⚡ Fast
+        📱 SMS OTP
 
-        🛡️ OTP Protected
+        💬 WhatsApp OTP
         """
     )
 
 
 # =========================================================
-# HERO HEADER
-# =========================================================
-
-st.markdown(
-    """
-    <div class="hero">
-
-        <div class="hero-title">
-            🔐 PragyanAI OTP Verification
-        </div>
-
-        <div class="hero-subtitle">
-            Verify your identity securely using
-            Email, SMS or WhatsApp.
-        </div>
-
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-
-# =========================================================
-# EMAIL
+# EMAIL VERIFICATION
 # =========================================================
 
 if selected_method == "📧 Email":
 
     st.markdown(
-        """
-        <div class="verification-card">
+        '<div class="card">',
+        unsafe_allow_html=True
+    )
 
-            <div class="method-icon">
-                📧
-            </div>
+    st.markdown(
+        '<div class="card-title">'
+        '📧 Email Verification'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
-            <div class="method-title">
-                Email Verification
-            </div>
-
-            <div class="method-description">
-                Enter your email address to receive
-                a secure 6-digit verification code.
-            </div>
-
-        </div>
-        """,
+    st.markdown(
+        '<div class="card-description">'
+        'Enter your email address and receive a secure OTP.'
+        '</div>',
         unsafe_allow_html=True
     )
 
@@ -714,20 +547,17 @@ if selected_method == "📧 Email":
                     f"❌ Email sending failed: {e}"
                 )
 
-    st.markdown(
-        '<div class="soft-divider"></div>',
-        unsafe_allow_html=True
-    )
+    st.markdown("")
 
     email_otp_input = st.text_input(
         "Enter Email OTP",
         max_chars=6,
-        placeholder="Enter 6-digit OTP",
-        key="email_otp_input"
+        key="email_otp_input",
+        placeholder="Enter 6-digit OTP"
     )
 
     if st.button(
-        "🔓 Verify Email OTP",
+        "✅ Verify Email OTP",
         key="verify_email",
         use_container_width=True
     ):
@@ -738,8 +568,8 @@ if selected_method == "📧 Email":
 
         if success:
 
-            show_party_booster(
-                "🎉 Email verified successfully!"
+            st.success(
+                f"🎉 {message}"
             )
 
         else:
@@ -748,41 +578,38 @@ if selected_method == "📧 Email":
 
     if st.session_state.email_verified:
 
-        st.markdown(
-            """
-            <div class="verified-box">
-                ✓ Email verification completed
-            </div>
-            """,
-            unsafe_allow_html=True
+        st.success(
+            "🟢 Email is verified."
         )
+
+    st.markdown(
+        '</div>',
+        unsafe_allow_html=True
+    )
 
 
 # =========================================================
-# SMS
+# SMS VERIFICATION
 # =========================================================
 
 elif selected_method == "📱 SMS":
 
     st.markdown(
-        """
-        <div class="verification-card">
+        '<div class="card">',
+        unsafe_allow_html=True
+    )
 
-            <div class="method-icon">
-                📱
-            </div>
+    st.markdown(
+        '<div class="card-title">'
+        '📱 SMS Verification'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
-            <div class="method-title">
-                SMS Verification
-            </div>
-
-            <div class="method-description">
-                Enter your mobile number to receive
-                a secure verification code through SMS.
-            </div>
-
-        </div>
-        """,
+    st.markdown(
+        '<div class="card-description">'
+        'Enter your mobile number and receive an OTP through SMS.'
+        '</div>',
         unsafe_allow_html=True
     )
 
@@ -808,7 +635,7 @@ elif selected_method == "📱 SMS":
 
             try:
 
-                send_twilio_otp(
+                status = send_twilio_otp(
                     phone,
                     "sms"
                 )
@@ -823,20 +650,17 @@ elif selected_method == "📱 SMS":
                     f"❌ SMS failed: {e}"
                 )
 
-    st.markdown(
-        '<div class="soft-divider"></div>',
-        unsafe_allow_html=True
-    )
+    st.markdown("")
 
     sms_otp = st.text_input(
         "Enter SMS OTP",
         max_chars=6,
-        placeholder="Enter 6-digit OTP",
-        key="sms_otp"
+        key="sms_otp",
+        placeholder="Enter 6-digit OTP"
     )
 
     if st.button(
-        "🔓 Verify SMS OTP",
+        "✅ Verify SMS OTP",
         key="verify_sms",
         use_container_width=True
     ):
@@ -866,8 +690,8 @@ elif selected_method == "📱 SMS":
 
                     st.session_state.sms_verified = True
 
-                    show_party_booster(
-                        "🎉 SMS verification successful!"
+                    st.success(
+                        "🎉 Phone number verified successfully."
                     )
 
                 else:
@@ -884,41 +708,38 @@ elif selected_method == "📱 SMS":
 
     if st.session_state.sms_verified:
 
-        st.markdown(
-            """
-            <div class="verified-box">
-                ✓ SMS verification completed
-            </div>
-            """,
-            unsafe_allow_html=True
+        st.success(
+            "🟢 SMS number is verified."
         )
+
+    st.markdown(
+        '</div>',
+        unsafe_allow_html=True
+    )
 
 
 # =========================================================
-# WHATSAPP
+# WHATSAPP VERIFICATION
 # =========================================================
 
 elif selected_method == "💬 WhatsApp":
 
     st.markdown(
-        """
-        <div class="verification-card">
+        '<div class="card">',
+        unsafe_allow_html=True
+    )
 
-            <div class="method-icon">
-                💬
-            </div>
+    st.markdown(
+        '<div class="card-title">'
+        '💬 WhatsApp Verification'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
-            <div class="method-title">
-                WhatsApp Verification
-            </div>
-
-            <div class="method-description">
-                Enter your WhatsApp number to receive
-                a secure verification code through WhatsApp.
-            </div>
-
-        </div>
-        """,
+    st.markdown(
+        '<div class="card-description">'
+        'Enter your WhatsApp number and receive an OTP through WhatsApp.'
+        '</div>',
         unsafe_allow_html=True
     )
 
@@ -944,7 +765,7 @@ elif selected_method == "💬 WhatsApp":
 
             try:
 
-                send_twilio_otp(
+                status = send_twilio_otp(
                     whatsapp,
                     "whatsapp"
                 )
@@ -959,20 +780,17 @@ elif selected_method == "💬 WhatsApp":
                     f"❌ WhatsApp failed: {e}"
                 )
 
-    st.markdown(
-        '<div class="soft-divider"></div>',
-        unsafe_allow_html=True
-    )
+    st.markdown("")
 
     whatsapp_otp = st.text_input(
         "Enter WhatsApp OTP",
         max_chars=6,
-        placeholder="Enter 6-digit OTP",
-        key="whatsapp_otp"
+        key="whatsapp_otp",
+        placeholder="Enter 6-digit OTP"
     )
 
     if st.button(
-        "🔓 Verify WhatsApp OTP",
+        "✅ Verify WhatsApp OTP",
         key="verify_whatsapp",
         use_container_width=True
     ):
@@ -1002,8 +820,8 @@ elif selected_method == "💬 WhatsApp":
 
                     st.session_state.whatsapp_verified = True
 
-                    show_party_booster(
-                        "🎉 WhatsApp verification successful!"
+                    st.success(
+                        "🎉 WhatsApp number verified successfully."
                     )
 
                 else:
@@ -1020,29 +838,25 @@ elif selected_method == "💬 WhatsApp":
 
     if st.session_state.whatsapp_verified:
 
-        st.markdown(
-            """
-            <div class="verified-box">
-                ✓ WhatsApp verification completed
-            </div>
-            """,
-            unsafe_allow_html=True
+        st.success(
+            "🟢 WhatsApp number is verified."
         )
+
+    st.markdown(
+        '</div>',
+        unsafe_allow_html=True
+    )
 
 
 # =========================================================
 # FOOTER
 # =========================================================
 
+st.divider()
+
 st.markdown(
-    """
-    <div class="footer">
-
-        🔐 PragyanAI OTP Verification
-        <br>
-        Secure • Simple • Reliable
-
-    </div>
-    """,
+    '<div class="footer">'
+    'PragyanAI • Secure OTP Verification System'
+    '</div>',
     unsafe_allow_html=True
 )
