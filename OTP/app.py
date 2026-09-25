@@ -1,18 +1,18 @@
 import streamlit as st
-import smtplib
 import random
 import time
-import re
-import hashlib
+import smtplib
 import requests
 
-from email.message import EmailMessage
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
 from twilio.rest import Client
 
 
-# ============================================================
-# PAGE CONFIGURATION
-# ============================================================
+# =========================================================
+# PAGE CONFIG
+# =========================================================
 
 st.set_page_config(
     page_title="PragyanAI OTP Verification",
@@ -21,98 +21,89 @@ st.set_page_config(
 )
 
 
-# ============================================================
-# CUSTOM DESIGN
-# ============================================================
+# =========================================================
+# CUSTOM CSS
+# =========================================================
+
+st.markdown("""
+<style>
+
+.main {
+    background-color: #f5f7fb;
+}
+
+.title {
+    text-align: center;
+    font-size: 42px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #666;
+    font-size: 18px;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 18px;
+    box-shadow: 0px 4px 18px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+}
+
+.card-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.footer {
+    text-align: center;
+    color: #777;
+    margin-top: 30px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
+# =========================================================
+# TITLE
+# =========================================================
 
 st.markdown(
-    """
-    <style>
+    '<div class="title">🔐 PragyanAI OTP Verification</div>',
+    unsafe_allow_html=True
+)
 
-    .main-title {
-        text-align: center;
-        font-size: 42px;
-        font-weight: bold;
-        margin-bottom: 5px;
-    }
-
-    .sub-title {
-        text-align: center;
-        font-size: 18px;
-        color: gray;
-        margin-bottom: 30px;
-    }
-
-    .channel-box {
-        padding: 15px;
-        border-radius: 12px;
-        border: 1px solid #dddddd;
-        margin-bottom: 15px;
-    }
-
-    </style>
-    """,
+st.markdown(
+    '<div class="subtitle">'
+    'Secure verification using Email, SMS, WhatsApp and Telegram'
+    '</div>',
     unsafe_allow_html=True
 )
 
 
-# ============================================================
-# HEADER
-# ============================================================
+# =========================================================
+# LOAD SECRETS
+# =========================================================
 
-st.markdown(
-    '<div class="main-title">🔐 PragyanAI</div>',
-    unsafe_allow_html=True
-)
+EMAIL_ADDRESS = st.secrets["EMAIL_ADDRESS"]
+EMAIL_APP_PASSWORD = st.secrets["EMAIL_APP_PASSWORD"]
 
-st.markdown(
-    '<div class="sub-title">Secure Multi-Channel OTP Verification System</div>',
-    unsafe_allow_html=True
-)
+TWILIO_ACCOUNT_SID = st.secrets["TWILIO_ACCOUNT_SID"]
+TWILIO_AUTH_TOKEN = st.secrets["TWILIO_AUTH_TOKEN"]
+TWILIO_VERIFY_SERVICE_SID = st.secrets["TWILIO_VERIFY_SERVICE_SID"]
 
-st.divider()
+TELEGRAM_GATEWAY_TOKEN = st.secrets["TELEGRAM_GATEWAY_TOKEN"]
 
 
-# ============================================================
-# LOAD STREAMLIT SECRETS
-# ============================================================
-
-try:
-
-    EMAIL_ADDRESS = st.secrets["EMAIL_ADDRESS"]
-    EMAIL_APP_PASSWORD = st.secrets["EMAIL_APP_PASSWORD"]
-
-    TWILIO_ACCOUNT_SID = st.secrets["TWILIO_ACCOUNT_SID"]
-    TWILIO_AUTH_TOKEN = st.secrets["TWILIO_AUTH_TOKEN"]
-    TWILIO_VERIFY_SERVICE_SID = st.secrets[
-        "TWILIO_VERIFY_SERVICE_SID"
-    ]
-
-    TELEGRAM_BOT_TOKEN = st.secrets["TELEGRAM_BOT_TOKEN"]
-
-except Exception:
-
-    st.error("❌ Streamlit Secrets are not configured.")
-
-    st.info(
-        """
-        Add these values in Streamlit Cloud → Settings → Secrets:
-
-        EMAIL_ADDRESS
-        EMAIL_APP_PASSWORD
-        TWILIO_ACCOUNT_SID
-        TWILIO_AUTH_TOKEN
-        TWILIO_VERIFY_SERVICE_SID
-        TELEGRAM_BOT_TOKEN
-        """
-    )
-
-    st.stop()
-
-
-# ============================================================
+# =========================================================
 # TWILIO CLIENT
-# ============================================================
+# =========================================================
 
 twilio_client = Client(
     TWILIO_ACCOUNT_SID,
@@ -120,98 +111,51 @@ twilio_client = Client(
 )
 
 
-# ============================================================
+# =========================================================
 # SESSION STATE
-# ============================================================
+# =========================================================
 
-session_defaults = {
+defaults = {
 
-    "email_hash": None,
+    "email_otp": None,
     "email_time": None,
+
+    "telegram_request_id": None,
+
     "email_verified": False,
-
-    "telegram_hash": None,
-    "telegram_time": None,
-    "telegram_verified": False,
-
     "sms_verified": False,
-    "whatsapp_verified": False
+    "whatsapp_verified": False,
+    "telegram_verified": False
 }
 
-
-for key, value in session_defaults.items():
+for key, value in defaults.items():
 
     if key not in st.session_state:
-
         st.session_state[key] = value
 
 
-# ============================================================
-# COMMON FUNCTIONS
-# ============================================================
+# =========================================================
+# OTP GENERATOR
+# =========================================================
 
 def generate_otp():
 
-    return f"{random.SystemRandom().randint(0, 999999):06d}"
+    return str(
+        random.randint(100000, 999999)
+    )
 
 
-def hash_otp(otp):
-
-    return hashlib.sha256(
-        otp.encode("utf-8")
-    ).hexdigest()
-
-
-def valid_email(email):
-
-    pattern = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
-
-    return re.fullmatch(
-        pattern,
-        email or ""
-    ) is not None
-
-
-def valid_phone(phone):
-
-    pattern = r"^\+[1-9]\d{7,14}$"
-
-    return re.fullmatch(
-        pattern,
-        phone or ""
-    ) is not None
-
-
-# ============================================================
-# EMAIL OTP
-# ============================================================
+# =========================================================
+# EMAIL
+# =========================================================
 
 def send_email_otp(email):
 
-    if not email:
+    otp = generate_otp()
 
-        return False, "❌ Please enter your email address."
+    subject = "PragyanAI Verification OTP"
 
-    if not valid_email(email):
-
-        return False, "❌ Please enter a valid email address."
-
-    try:
-
-        otp = generate_otp()
-
-        message = EmailMessage()
-
-        message["Subject"] = (
-            "PragyanAI - Email Verification OTP"
-        )
-
-        message["From"] = EMAIL_ADDRESS
-
-        message["To"] = email
-
-        message.set_content(
-            f"""
+    body = f"""
 Hello,
 
 Your PragyanAI verification OTP is:
@@ -220,304 +164,245 @@ Your PragyanAI verification OTP is:
 
 This OTP is valid for 5 minutes.
 
-Please do not share this OTP with anyone.
+Do not share this OTP with anyone.
 
 Regards,
 PragyanAI
 """
+
+    message = MIMEMultipart()
+
+    message["From"] = EMAIL_ADDRESS
+    message["To"] = email
+    message["Subject"] = subject
+
+    message.attach(
+        MIMEText(body, "plain")
+    )
+
+    with smtplib.SMTP(
+        "smtp.gmail.com",
+        587
+    ) as server:
+
+        server.starttls()
+
+        server.login(
+            EMAIL_ADDRESS,
+            EMAIL_APP_PASSWORD
         )
 
-        with smtplib.SMTP_SSL(
-            "smtp.gmail.com",
-            465
-        ) as smtp:
+        server.sendmail(
+            EMAIL_ADDRESS,
+            email,
+            message.as_string()
+        )
 
-            smtp.login(
-                EMAIL_ADDRESS,
-                EMAIL_APP_PASSWORD
-            )
-
-            smtp.send_message(message)
-
-        st.session_state.email_hash = hash_otp(otp)
-
-        st.session_state.email_time = time.time()
-
-        return True, "✅ Email OTP sent successfully."
-
-    except Exception as e:
-
-        return False, f"❌ Email sending failed: {e}"
+    st.session_state.email_otp = otp
+    st.session_state.email_time = time.time()
 
 
-def verify_email_otp(otp):
+def verify_email_otp(entered_otp):
 
-    if not otp:
+    if not entered_otp:
 
-        return False, "❌ Please enter the Email OTP."
+        return False, "Please enter the OTP."
 
-    if not otp.isdigit() or len(otp) != 6:
+    if st.session_state.email_otp is None:
 
-        return False, "❌ OTP must contain exactly 6 digits."
+        return False, "Please request a new OTP."
 
-    if st.session_state.email_hash is None:
-
-        return False, "❌ Please send an Email OTP first."
-
-    if (
+    elapsed = (
         time.time()
         - st.session_state.email_time
-        > 300
-    ):
+    )
 
-        st.session_state.email_hash = None
+    if elapsed > 300:
 
-        st.session_state.email_time = None
+        st.session_state.email_otp = None
 
-        return False, "⏰ OTP expired. Please request a new OTP."
+        return False, "OTP expired. Please request a new OTP."
 
-    if (
-        hash_otp(otp)
-        == st.session_state.email_hash
-    ):
+    if entered_otp == st.session_state.email_otp:
 
         st.session_state.email_verified = True
 
-        st.session_state.email_hash = None
+        st.session_state.email_otp = None
 
-        st.session_state.email_time = None
+        return True, "Email verified successfully."
 
-        return True, "🎉 Email verified successfully."
-
-    return False, "❌ Invalid Email OTP."
+    return False, "Invalid OTP."
 
 
-# ============================================================
+# =========================================================
 # TWILIO SMS / WHATSAPP
-# ============================================================
+# =========================================================
 
 def send_twilio_otp(phone, channel):
 
-    if not phone:
-
-        return False, "❌ Please enter your phone number."
-
-    if not valid_phone(phone):
-
-        return (
-            False,
-            "❌ Use international format, e.g. +919876543210."
+    verification = (
+        twilio_client
+        .verify
+        .v2
+        .services(TWILIO_VERIFY_SERVICE_SID)
+        .verifications
+        .create(
+            to=phone,
+            channel=channel
         )
+    )
 
-    try:
-
-        verification = (
-            twilio_client
-            .verify
-            .v2
-            .services(TWILIO_VERIFY_SERVICE_SID)
-            .verifications
-            .create(
-                to=phone,
-                channel=channel
-            )
-        )
-
-        return (
-            True,
-            f"✅ {channel.upper()} OTP sent successfully. "
-            f"Status: {verification.status}"
-        )
-
-    except Exception as e:
-
-        return (
-            False,
-            f"❌ {channel.upper()} sending failed: {e}"
-        )
+    return verification.status
 
 
 def verify_twilio_otp(phone, otp):
 
-    if not phone:
-
-        return False, "❌ Please enter your phone number."
-
-    if not otp:
-
-        return False, "❌ Please enter the OTP."
-
-    if not valid_phone(phone):
-
-        return (
-            False,
-            "❌ Use international format, e.g. +919876543210."
+    result = (
+        twilio_client
+        .verify
+        .v2
+        .services(TWILIO_VERIFY_SERVICE_SID)
+        .verification_checks
+        .create(
+            to=phone,
+            code=otp
         )
+    )
 
-    if not otp.isdigit() or len(otp) != 6:
-
-        return False, "❌ OTP must contain exactly 6 digits."
-
-    try:
-
-        verification_check = (
-            twilio_client
-            .verify
-            .v2
-            .services(TWILIO_VERIFY_SERVICE_SID)
-            .verification_checks
-            .create(
-                to=phone,
-                code=otp
-            )
-        )
-
-        if verification_check.status == "approved":
-
-            return True, "🎉 OTP verified successfully."
-
-        return False, "❌ Invalid or expired OTP."
-
-    except Exception as e:
-
-        return (
-            False,
-            f"❌ OTP verification failed: {e}"
-        )
+    return result.status == "approved"
 
 
-# ============================================================
-# TELEGRAM OTP
-# ============================================================
+# =========================================================
+# TELEGRAM GATEWAY
+# =========================================================
 
-def send_telegram_otp(chat_id):
+TELEGRAM_URL = (
+    "https://gatewayapi.telegram.org"
+)
 
-    if not chat_id:
 
-        return False, "❌ Please enter your Telegram Chat ID."
-
-    otp = generate_otp()
+def send_telegram_otp(phone):
 
     url = (
-        "https://api.telegram.org/"
-        f"bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        f"{TELEGRAM_URL}/sendVerificationMessage"
     )
 
-    message = (
-        "🔐 PragyanAI OTP Verification\n\n"
-        f"Your OTP is: {otp}\n\n"
-        "This OTP is valid for 5 minutes.\n"
-        "Do not share this OTP with anyone."
+    headers = {
+
+        "Authorization":
+        f"Bearer {TELEGRAM_GATEWAY_TOKEN}",
+
+        "Content-Type":
+        "application/json"
+    }
+
+    payload = {
+
+        "phone_number": phone,
+
+        "code_length": 6,
+
+        "ttl": 300
+    }
+
+    response = requests.post(
+        url,
+        headers=headers,
+        json=payload,
+        timeout=20
     )
 
-    try:
+    data = response.json()
 
-        response = requests.post(
-            url,
-            json={
-                "chat_id": chat_id.strip(),
-                "text": message
-            },
-            timeout=15
-        )
+    if not data.get("ok"):
 
-        data = response.json()
-
-        if response.ok and data.get("ok"):
-
-            st.session_state.telegram_hash = hash_otp(
-                otp
-            )
-
-            st.session_state.telegram_time = time.time()
-
-            return (
-                True,
-                "✅ Telegram OTP sent successfully."
-            )
-
-        return (
-            False,
-            "❌ Telegram failed: "
-            + str(
-                data.get(
-                    "description",
-                    "Unknown error"
-                )
+        raise Exception(
+            data.get(
+                "error",
+                "Telegram OTP failed"
             )
         )
 
-    except Exception as e:
-
-        return False, f"❌ Telegram failed: {e}"
+    return data["result"]["request_id"]
 
 
-def verify_telegram_otp(otp):
+def verify_telegram_otp(
+    request_id,
+    otp
+):
 
-    if not otp:
+    url = (
+        f"{TELEGRAM_URL}/checkVerificationStatus"
+    )
 
-        return False, "❌ Please enter the Telegram OTP."
+    headers = {
 
-    if not otp.isdigit() or len(otp) != 6:
+        "Authorization":
+        f"Bearer {TELEGRAM_GATEWAY_TOKEN}",
 
-        return False, "❌ OTP must contain exactly 6 digits."
+        "Content-Type":
+        "application/json"
+    }
 
-    if st.session_state.telegram_hash is None:
+    payload = {
 
-        return False, "❌ Please send a Telegram OTP first."
+        "request_id": request_id,
 
-    if (
-        time.time()
-        - st.session_state.telegram_time
-        > 300
-    ):
+        "code": otp
+    }
 
-        st.session_state.telegram_hash = None
+    response = requests.post(
+        url,
+        headers=headers,
+        json=payload,
+        timeout=20
+    )
 
-        st.session_state.telegram_time = None
+    data = response.json()
 
-        return False, "⏰ Telegram OTP expired."
+    if not data.get("ok"):
 
-    if (
-        hash_otp(otp)
-        == st.session_state.telegram_hash
-    ):
-
-        st.session_state.telegram_verified = True
-
-        st.session_state.telegram_hash = None
-
-        st.session_state.telegram_time = None
-
-        return (
-            True,
-            "🎉 Telegram verified successfully."
+        raise Exception(
+            data.get(
+                "error",
+                "Telegram verification failed"
+            )
         )
 
-    return False, "❌ Invalid Telegram OTP."
+    return data["result"]["status"] == "code_valid"
 
 
-# ============================================================
+# =========================================================
 # TABS
-# ============================================================
+# =========================================================
 
-email_tab, sms_tab, whatsapp_tab, telegram_tab = st.tabs(
+tab1, tab2, tab3, tab4 = st.tabs(
     [
         "📧 Email",
         "📱 SMS",
-        "🟢 WhatsApp",
+        "💬 WhatsApp",
         "✈️ Telegram"
     ]
 )
 
 
-# ============================================================
+# =========================================================
 # EMAIL TAB
-# ============================================================
+# =========================================================
 
-with email_tab:
+with tab1:
 
-    st.subheader("📧 Email OTP Verification")
+    st.markdown(
+        '<div class="card">',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        '<div class="card-title">'
+        '📧 Email Verification'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
     email = st.text_input(
         "Email Address",
@@ -531,28 +416,36 @@ with email_tab:
         use_container_width=True
     ):
 
-        success, message = send_email_otp(
-            email
-        )
+        if not email:
 
-        if success:
-
-            st.success(message)
+            st.error(
+                "Please enter your email address."
+            )
 
         else:
 
-            st.error(message)
+            try:
+
+                send_email_otp(email)
+
+                st.success(
+                    "✅ OTP sent successfully to your email."
+                )
+
+            except Exception as e:
+
+                st.error(
+                    f"❌ Email sending failed: {e}"
+                )
 
     email_otp = st.text_input(
         "Enter Email OTP",
-        placeholder="6-digit OTP",
         max_chars=6,
-        type="password",
         key="email_otp"
     )
 
     if st.button(
-        "✅ Verify Email",
+        "✅ Verify Email OTP",
         key="verify_email",
         use_container_width=True
     ):
@@ -563,106 +456,145 @@ with email_tab:
 
         if success:
 
-            st.success(message)
-
-            st.balloons()
+            st.success(
+                f"🎉 {message}"
+            )
 
         else:
 
             st.error(message)
 
-    if st.session_state.email_verified:
+    st.markdown(
+        '</div>',
+        unsafe_allow_html=True
+    )
 
-        st.success(
-            "🎉 Email verification completed."
-        )
 
-
-# ============================================================
+# =========================================================
 # SMS TAB
-# ============================================================
+# =========================================================
 
-with sms_tab:
+with tab2:
 
-    st.subheader("📱 SMS OTP Verification")
+    st.markdown(
+        '<div class="card">',
+        unsafe_allow_html=True
+    )
 
-    sms_phone = st.text_input(
+    st.markdown(
+        '<div class="card-title">'
+        '📱 SMS Verification'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    phone = st.text_input(
         "Phone Number",
         placeholder="+919876543210",
         key="sms_phone"
     )
 
     if st.button(
-        "📨 Send SMS OTP",
+        "📲 Send SMS OTP",
         key="send_sms",
         use_container_width=True
     ):
 
-        success, message = send_twilio_otp(
-            sms_phone,
-            "sms"
-        )
+        if not phone:
 
-        if success:
-
-            st.success(message)
+            st.error(
+                "Please enter your phone number."
+            )
 
         else:
 
-            st.error(message)
+            try:
+
+                status = send_twilio_otp(
+                    phone,
+                    "sms"
+                )
+
+                st.success(
+                    f"✅ OTP sent successfully. Status: {status}"
+                )
+
+            except Exception as e:
+
+                st.error(
+                    f"❌ SMS failed: {e}"
+                )
 
     sms_otp = st.text_input(
         "Enter SMS OTP",
-        placeholder="6-digit OTP",
         max_chars=6,
-        type="password",
         key="sms_otp"
     )
 
     if st.button(
-        "✅ Verify SMS",
+        "✅ Verify SMS OTP",
         key="verify_sms",
         use_container_width=True
     ):
 
-        success, message = verify_twilio_otp(
-            sms_phone,
-            sms_otp
-        )
+        if not sms_otp:
 
-        if success:
-
-            st.session_state.sms_verified = True
-
-            st.success(message)
-
-            st.balloons()
+            st.error(
+                "Please enter the OTP."
+            )
 
         else:
 
-            st.error(message)
+            try:
 
-    if st.session_state.sms_verified:
+                verified = verify_twilio_otp(
+                    phone,
+                    sms_otp
+                )
 
-        st.success(
-            "🎉 SMS verification completed."
-        )
+                if verified:
 
+                    st.success(
+                        "🎉 Phone number verified successfully."
+                    )
 
-# ============================================================
-# WHATSAPP TAB
-# ============================================================
+                else:
 
-with whatsapp_tab:
+                    st.error(
+                        "❌ Invalid OTP."
+                    )
 
-    st.subheader("🟢 WhatsApp OTP Verification")
+            except Exception as e:
 
-    st.info(
-        "WhatsApp OTP requires WhatsApp to be enabled "
-        "and configured in your Twilio Verify Service."
+                st.error(
+                    f"❌ Verification failed: {e}"
+                )
+
+    st.markdown(
+        '</div>',
+        unsafe_allow_html=True
     )
 
-    whatsapp_phone = st.text_input(
+
+# =========================================================
+# WHATSAPP TAB
+# =========================================================
+
+with tab3:
+
+    st.markdown(
+        '<div class="card">',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        '<div class="card-title">'
+        '💬 WhatsApp Verification'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    whatsapp = st.text_input(
         "WhatsApp Number",
         placeholder="+919876543210",
         key="whatsapp_phone"
@@ -674,74 +606,104 @@ with whatsapp_tab:
         use_container_width=True
     ):
 
-        success, message = send_twilio_otp(
-            whatsapp_phone,
-            "whatsapp"
-        )
+        if not whatsapp:
 
-        if success:
-
-            st.success(message)
+            st.error(
+                "Please enter your WhatsApp number."
+            )
 
         else:
 
-            st.error(message)
+            try:
+
+                status = send_twilio_otp(
+                    whatsapp,
+                    "whatsapp"
+                )
+
+                st.success(
+                    f"✅ WhatsApp OTP sent successfully. Status: {status}"
+                )
+
+            except Exception as e:
+
+                st.error(
+                    f"❌ WhatsApp failed: {e}"
+                )
 
     whatsapp_otp = st.text_input(
         "Enter WhatsApp OTP",
-        placeholder="6-digit OTP",
         max_chars=6,
-        type="password",
         key="whatsapp_otp"
     )
 
     if st.button(
-        "✅ Verify WhatsApp",
+        "✅ Verify WhatsApp OTP",
         key="verify_whatsapp",
         use_container_width=True
     ):
 
-        success, message = verify_twilio_otp(
-            whatsapp_phone,
-            whatsapp_otp
-        )
+        if not whatsapp_otp:
 
-        if success:
-
-            st.session_state.whatsapp_verified = True
-
-            st.success(message)
-
-            st.balloons()
+            st.error(
+                "Please enter the OTP."
+            )
 
         else:
 
-            st.error(message)
+            try:
 
-    if st.session_state.whatsapp_verified:
+                verified = verify_twilio_otp(
+                    whatsapp,
+                    whatsapp_otp
+                )
 
-        st.success(
-            "🎉 WhatsApp verification completed."
-        )
+                if verified:
 
+                    st.success(
+                        "🎉 WhatsApp number verified successfully."
+                    )
 
-# ============================================================
-# TELEGRAM TAB
-# ============================================================
+                else:
 
-with telegram_tab:
+                    st.error(
+                        "❌ Invalid OTP."
+                    )
 
-    st.subheader("✈️ Telegram OTP Verification")
+            except Exception as e:
 
-    st.info(
-        "Open your Telegram bot and press START before "
-        "requesting an OTP."
+                st.error(
+                    f"❌ Verification failed: {e}"
+                )
+
+    st.markdown(
+        '</div>',
+        unsafe_allow_html=True
     )
 
-    chat_id = st.text_input(
-        "Telegram Chat ID",
-        placeholder="Example: 123456789",
-        key="telegram_chat_id"
+
+# =========================================================
+# TELEGRAM TAB
+# =========================================================
+
+with tab4:
+
+    st.markdown(
+        '<div class="card">',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        '<div class="card-title">'
+        '✈️ Telegram Verification'
+        '</div>',
+        unsafe_allow_html=True
+    )
+
+    telegram_phone = st.text_input(
+        "Telegram Phone Number",
+        placeholder="+919876543210",
+        key="telegram_phone"
     )
 
     if st.button(
@@ -750,63 +712,102 @@ with telegram_tab:
         use_container_width=True
     ):
 
-        success, message = send_telegram_otp(
-            chat_id
-        )
+        if not telegram_phone:
 
-        if success:
-
-            st.success(message)
+            st.error(
+                "Please enter your phone number."
+            )
 
         else:
 
-            st.error(message)
+            try:
+
+                request_id = send_telegram_otp(
+                    telegram_phone
+                )
+
+                st.session_state.telegram_request_id = (
+                    request_id
+                )
+
+                st.success(
+                    "✅ Telegram OTP sent successfully."
+                )
+
+            except Exception as e:
+
+                st.error(
+                    f"❌ Telegram OTP failed: {e}"
+                )
 
     telegram_otp = st.text_input(
         "Enter Telegram OTP",
-        placeholder="6-digit OTP",
-        max_chars=6,
-        type="password",
+        max_chars=8,
         key="telegram_otp"
     )
 
     if st.button(
-        "✅ Verify Telegram",
+        "✅ Verify Telegram OTP",
         key="verify_telegram",
         use_container_width=True
     ):
 
-        success, message = verify_telegram_otp(
-            telegram_otp
-        )
+        if not st.session_state.telegram_request_id:
 
-        if success:
+            st.error(
+                "Please request a Telegram OTP first."
+            )
 
-            st.success(message)
+        elif not telegram_otp:
 
-            st.balloons()
+            st.error(
+                "Please enter the OTP."
+            )
 
         else:
 
-            st.error(message)
+            try:
 
-    if st.session_state.telegram_verified:
+                verified = verify_telegram_otp(
+                    st.session_state.telegram_request_id,
+                    telegram_otp
+                )
 
-        st.success(
-            "🎉 Telegram verification completed."
-        )
+                if verified:
+
+                    st.success(
+                        "🎉 Telegram number verified successfully."
+                    )
+
+                    st.session_state.telegram_request_id = None
+
+                else:
+
+                    st.error(
+                        "❌ Invalid or expired OTP."
+                    )
+
+            except Exception as e:
+
+                st.error(
+                    f"❌ Verification failed: {e}"
+                )
+
+    st.markdown(
+        '</div>',
+        unsafe_allow_html=True
+    )
 
 
-# ============================================================
+# =========================================================
 # FOOTER
-# ============================================================
+# =========================================================
 
 st.divider()
 
-st.caption(
-    "🔐 PragyanAI Multi-Channel OTP Verification System"
-)
-
-st.caption(
-    "API credentials are loaded securely from Streamlit Secrets."
+st.markdown(
+    '<div class="footer">'
+    'PragyanAI • Secure OTP Verification System'
+    '</div>',
+    unsafe_allow_html=True
 )
