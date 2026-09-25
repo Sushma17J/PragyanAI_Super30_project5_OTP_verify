@@ -72,8 +72,6 @@ st.markdown(
         color: #000000 !important;
     }
 
-    /* Sidebar title */
-
     .sidebar-title {
         font-size: 26px;
         font-weight: 700;
@@ -308,20 +306,200 @@ def generate_otp():
 
 
 # =========================================================
-# PARTY BOOSTER
+# VIRTUAL PARTY BLAST
 # =========================================================
 
 def party_booster():
 
     st.markdown(
         """
-        <div style="
+        <style>
+
+        /* Main celebration */
+
+        .party-center {
+            position: relative;
             text-align: center;
-            font-size: 42px;
-            padding: 10px;
-        ">
-            🎉 🎊 🎉 🎊 🎉
+            height: 100px;
+            overflow: visible;
+            z-index: 9999;
+        }
+
+        .party-main {
+            position: absolute;
+            left: 50%;
+            top: 10px;
+            transform: translateX(-50%) scale(0.1);
+            font-size: 65px;
+            animation: party-pop 0.8s ease-out forwards;
+        }
+
+        @keyframes party-pop {
+
+            0% {
+                transform: translateX(-50%) scale(0.1);
+                opacity: 0;
+            }
+
+            50% {
+                transform: translateX(-50%) scale(1.5);
+                opacity: 1;
+            }
+
+            75% {
+                transform: translateX(-50%) scale(0.9);
+            }
+
+            100% {
+                transform: translateX(-50%) scale(1);
+                opacity: 1;
+            }
+
+        }
+
+        /* Explosion particles */
+
+        .blast {
+            position: fixed;
+            left: 50%;
+            top: 45%;
+            font-size: 28px;
+            z-index: 99999;
+            opacity: 0;
+            animation: blast-animation 1.8s ease-out forwards;
+        }
+
+        @keyframes blast-animation {
+
+            0% {
+                transform: translate(0, 0) scale(0.2) rotate(0deg);
+                opacity: 1;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            100% {
+                transform:
+                    translate(var(--x), var(--y))
+                    scale(1.2)
+                    rotate(720deg);
+                opacity: 0;
+            }
+
+        }
+
+        </style>
+
+        <div class="party-center">
+
+            <div class="party-main">
+                🎉
+            </div>
+
         </div>
+
+        <!-- TOP LEFT -->
+        <div class="blast"
+             style="--x:-320px; --y:-220px; animation-delay:0s;">
+            🎊
+        </div>
+
+        <div class="blast"
+             style="--x:-250px; --y:-300px; animation-delay:0.05s;">
+            ✨
+        </div>
+
+        <div class="blast"
+             style="--x:-150px; --y:-350px; animation-delay:0.1s;">
+            🎉
+        </div>
+
+        <!-- TOP CENTER -->
+        <div class="blast"
+             style="--x:-50px; --y:-380px; animation-delay:0.05s;">
+            🎊
+        </div>
+
+        <div class="blast"
+             style="--x:50px; --y:-380px; animation-delay:0.1s;">
+            ✨
+        </div>
+
+        <div class="blast"
+             style="--x:150px; --y:-350px; animation-delay:0.05s;">
+            🎉
+        </div>
+
+        <div class="blast"
+             style="--x:250px; --y:-300px; animation-delay:0.1s;">
+            🎊
+        </div>
+
+        <div class="blast"
+             style="--x:320px; --y:-220px; animation-delay:0s;">
+            ✨
+        </div>
+
+        <!-- LEFT -->
+        <div class="blast"
+             style="--x:-400px; --y:-80px; animation-delay:0.1s;">
+            🎉
+        </div>
+
+        <div class="blast"
+             style="--x:-450px; --y:20px; animation-delay:0.05s;">
+            🎊
+        </div>
+
+        <div class="blast"
+             style="--x:-400px; --y:120px; animation-delay:0.1s;">
+            ✨
+        </div>
+
+        <!-- RIGHT -->
+        <div class="blast"
+             style="--x:400px; --y:-80px; animation-delay:0.05s;">
+            🎊
+        </div>
+
+        <div class="blast"
+             style="--x:450px; --y:20px; animation-delay:0.1s;">
+            🎉
+        </div>
+
+        <div class="blast"
+             style="--x:400px; --y:120px; animation-delay:0.05s;">
+            ✨
+        </div>
+
+        <!-- BOTTOM -->
+        <div class="blast"
+             style="--x:-300px; --y:220px; animation-delay:0.1s;">
+            🎉
+        </div>
+
+        <div class="blast"
+             style="--x:-180px; --y:280px; animation-delay:0.05s;">
+            🎊
+        </div>
+
+        <div class="blast"
+             style="--x:0px; --y:320px; animation-delay:0.1s;">
+            ✨
+        </div>
+
+        <div class="blast"
+             style="--x:180px; --y:280px; animation-delay:0.05s;">
+            🎉
+        </div>
+
+        <div class="blast"
+             style="--x:300px; --y:220px; animation-delay:0.1s;">
+            🎊
+        </div>
+
         """,
         unsafe_allow_html=True
     )
@@ -657,7 +835,7 @@ elif selected_method == "📱 SMS":
 
             try:
 
-                status = send_twilio_otp(
+                send_twilio_otp(
                     phone,
                     "sms"
                 )
@@ -789,7 +967,7 @@ elif selected_method == "💬 WhatsApp":
 
             try:
 
-                status = send_twilio_otp(
+                send_twilio_otp(
                     whatsapp,
                     "whatsapp"
                 )
