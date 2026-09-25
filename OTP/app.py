@@ -290,7 +290,7 @@ def send_telegram_otp(phone):
     headers = {
 
         "Authorization":
-        f"Bearer {TELEGRAM_GATEWAY_TOKEN}",
+        f"Bearer {TELEGRAM_BOT_TOKEN}",
 
         "Content-Type":
         "application/json"
@@ -338,7 +338,7 @@ def verify_telegram_otp(
     headers = {
 
         "Authorization":
-        f"Bearer {TELEGRAM_GATEWAY_TOKEN}",
+        f"Bearer {TELEGRAM_BOT_TOKEN}",
 
         "Content-Type":
         "application/json"
