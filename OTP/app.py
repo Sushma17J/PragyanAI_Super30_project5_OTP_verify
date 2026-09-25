@@ -308,6 +308,26 @@ def generate_otp():
 
 
 # =========================================================
+# PARTY BOOSTER
+# =========================================================
+
+def party_booster():
+
+    st.markdown(
+        """
+        <div style="
+            text-align: center;
+            font-size: 42px;
+            padding: 10px;
+        ">
+            🎉 🎊 🎉 🎊 🎉
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+# =========================================================
 # EMAIL OTP
 # =========================================================
 
@@ -569,8 +589,10 @@ if selected_method == "📧 Email":
         if success:
 
             st.success(
-                f"🎉 {message}"
+                "🎉 Email verification successful!"
             )
+
+            party_booster()
 
         else:
 
@@ -691,8 +713,10 @@ elif selected_method == "📱 SMS":
                     st.session_state.sms_verified = True
 
                     st.success(
-                        "🎉 Phone number verified successfully."
+                        "🎉 SMS verification successful!"
                     )
+
+                    party_booster()
 
                 else:
 
@@ -821,8 +845,10 @@ elif selected_method == "💬 WhatsApp":
                     st.session_state.whatsapp_verified = True
 
                     st.success(
-                        "🎉 WhatsApp number verified successfully."
+                        "🎉 WhatsApp verification successful!"
                     )
+
+                    party_booster()
 
                 else:
 
