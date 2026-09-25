@@ -98,7 +98,7 @@ TWILIO_ACCOUNT_SID = st.secrets["TWILIO_ACCOUNT_SID"]
 TWILIO_AUTH_TOKEN = st.secrets["TWILIO_AUTH_TOKEN"]
 TWILIO_VERIFY_SERVICE_SID = st.secrets["TWILIO_VERIFY_SERVICE_SID"]
 
-TELEGRAM_GATEWAY_TOKEN = st.secrets["TELEGRAM_GATEWAY_TOKEN"]
+TELEGRAM_BOT_TOKEN = st.secrets["TELEGRAM_BOT_TOKEN"]
 
 
 # =========================================================
